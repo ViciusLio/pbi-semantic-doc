@@ -244,6 +244,49 @@ Generates a `.jsonl` file where each line is a semantically self-contained chunk
 
 **Benchmark** (`--benchmark`): auto-generates questions from the model structure, simulates TF-based retrieval, and reports token savings and retrieval precision in MD/HTML/JSON. Typical result: **~95–99% token reduction** per query vs passing the full document.
 
+### Query your model with AI
+
+Once you have the `.jsonl`, you can ask questions in plain language about your Power BI model.
+
+**Option A — `ask_model.py` (quickstart, no server)**
+
+A ready-to-use script included in the repository. TF retrieval + Claude API, zero infrastructure:
+
+```bash
+pip install anthropic
+
+# Single question
+python ask_model.py DOC_MyProject.jsonl --api-key sk-ant-... "Which measures use time intelligence?"
+
+# Interactive mode
+python ask_model.py DOC_MyProject.jsonl --api-key sk-ant-...
+
+# Broad questions — send all chunks
+python ask_model.py DOC_MyProject.jsonl --api-key sk-ant-... --all-chunks "List all measures with their DAX"
+```
+
+The script uses a DAX-aware, lineage-aware system prompt: it knows how to interpret `depends_on_measures`, `compatible_slicers`, `base_tables`, and `flags` fields directly from the chunk metadata — no further parsing required.
+
+Example questions that work well:
+- *"Can I use the Calendar table as a slicer for Revenue YTD?"* → checks `compatible_slicers`
+- *"What does the CSAT Impact measure actually calculate?"* → explains DAX + `base_tables`
+- *"Which measures have circular dependencies?"* → checks `flags`
+- *"What tables does the Margin % measure touch?"* → reads `base_tables` + `depends_on_measures`
+
+**Option B — CodeIntelligence (full RAG stack)**
+
+For production use, persistent vector store, chat UI, and OpenAI/Anthropic-compatible API endpoints, use [CodeIntelligence](https://github.com/ViciusLio/CodeIntelligence) — a companion RAG toolkit that ingests any JSONL chunk file including those produced by `pbi-semantic-doc`:
+
+```
+pbi-semantic-doc ./MyProject.SemanticModel --format rag   # → DOC_MyProject.jsonl
+# then load into CodeIntelligence for:
+#   • semantic retrieval via Ollama embeddings
+#   • cross-encoder reranking
+#   • ChromaDB persistent vector store
+#   • chat UI at localhost:8080
+#   • OpenAI / Anthropic / Ollama compatible endpoints
+```
+
 ### General
 - Zero external dependencies — pure Python 3.9+ stdlib
 - Installable via pip; works as a CLI or Python library
