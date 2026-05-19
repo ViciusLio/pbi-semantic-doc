@@ -60,6 +60,7 @@ class RagGenerator:
         self,
         model: Optional["SemanticModel"] = None,
         report_metrics: Optional["ReportMetrics"] = None,
+        report=None,  # raw Report object — provides page chunks
     ) -> list[RagChunk]:
         from .lineage import ModelLineage
 
@@ -84,9 +85,11 @@ class RagGenerator:
                     lin = lineage_map.get((table.name, measure.name))
                     chunks.append(self._measure_chunk(measure, table.name, lin))
 
-        if report_metrics:
-            for page in report_metrics.pages:
-                chunks.append(self._page_chunk(page, report_metrics.report_name))
+        # Page chunks come from the raw Report object (ReportMetrics is aggregate-only)
+        report_name = (report_metrics.report_name if report_metrics else None) or (report.name if report else None)
+        if report and report_name:
+            for page in report.pages:
+                chunks.append(self._page_chunk(page, report_name))
 
         return chunks
 
@@ -94,8 +97,9 @@ class RagGenerator:
         self,
         model: Optional["SemanticModel"] = None,
         report_metrics: Optional["ReportMetrics"] = None,
+        report=None,
     ) -> str:
-        chunks = self.generate(model, report_metrics)
+        chunks = self.generate(model, report_metrics, report)
         return "\n".join(c.to_json() for c in chunks) + "\n"
 
     # ── chunk builders ────────────────────────────────────────────────────────

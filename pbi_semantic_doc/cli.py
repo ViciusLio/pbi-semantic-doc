@@ -456,6 +456,7 @@ def analyze_combined(args) -> int:
     # Parse both components first so we can use the real model/report name
     model = None
     report_metrics = None
+    report = None
 
     if semantic_model_path:
         try:
@@ -515,7 +516,7 @@ def analyze_combined(args) -> int:
     elif args.format == "rag":
         embedder = _build_embedder(args)
         rag_gen = RagGenerator()
-        chunks = rag_gen.generate(model=model, report_metrics=report_metrics)
+        chunks = rag_gen.generate(model=model, report_metrics=report_metrics, report=report)
         chunks = _embed_chunks(chunks, embedder, args.quiet)
         content = "\n".join(c.to_json() for c in chunks) + "\n"
     else:  # markdown — unified single document
