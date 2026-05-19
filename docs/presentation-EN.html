@@ -1189,6 +1189,114 @@
 
 
 <!-- ================================================================
+     SLIDE 8b — QUERY YOUR MODEL WITH AI
+     ================================================================ -->
+<section>
+<div class="slide slide-dark" style="position:relative;">
+    <div class="bg-deco">
+        <svg width="100%" height="100%" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg"
+             style="position:absolute;top:0;left:0;">
+            <circle cx="1100" cy="150" r="320" stroke="#F5B200" stroke-width="1" fill="none" opacity="0.04"/>
+            <circle cx="150" cy="560" r="260" stroke="#48A8FF" stroke-width="1" fill="none" opacity="0.05"/>
+        </svg>
+    </div>
+
+    <div class="slide-header" style="position:relative;z-index:2;">
+        <div class="vl-mark">
+            <div class="vl-box">VL</div>
+            <span class="vl-name vl-name-dark">pbi-semantic-doc</span>
+        </div>
+        <div class="slide-eyebrow ey-dark">08b &nbsp;—&nbsp; Query your model with AI</div>
+    </div>
+
+    <div style="font-size:26px; font-weight:900; color:white; line-height:1.2; margin-bottom:20px; position:relative;z-index:2;">
+        From JSONL to <span class="accent-gold">natural language answers</span>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; flex:1; position:relative;z-index:2;">
+
+        <div class="arch-box fragment fade-up" data-fragment-index="0" style="padding:20px;">
+            <div style="font-size:24px; margin-bottom:10px;">⚡</div>
+            <div style="font-size:14px; font-weight:900; color:white; margin-bottom:8px;">ask_model.py — quickstart</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.5); line-height:1.6; margin-bottom:12px;">
+                Included in the repo. TF retrieval + Claude API.<br>No server, no infrastructure.
+            </div>
+            <div style="background:rgba(0,0,0,0.35); border-radius:8px; padding:10px; font-size:10px; color:var(--gold); font-family:monospace; line-height:1.8;">
+                pip install anthropic<br>
+                python ask_model.py model.jsonl \<br>
+                &nbsp;&nbsp;--api-key sk-ant-...<br><br>
+                <span style="color:rgba(255,255,255,0.4);"># --all-chunks for broad queries</span><br>
+                <span style="color:rgba(255,255,255,0.4);"># --top-k 20 for more context</span>
+            </div>
+        </div>
+
+        <div class="arch-box fragment fade-up" data-fragment-index="1" style="padding:20px;">
+            <div style="font-size:24px; margin-bottom:10px;">🧠</div>
+            <div style="font-size:14px; font-weight:900; color:white; margin-bottom:8px;">DAX-aware system prompt</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.5); line-height:1.6; margin-bottom:12px;">
+                Claude knows how to read each chunk field directly — no extra parsing needed.
+            </div>
+            <div style="display:flex; flex-direction:column; gap:7px;">
+                <div style="background:rgba(245,178,0,0.08); border-left:2px solid var(--gold); padding:6px 10px; border-radius:0 6px 6px 0; font-size:10px; color:rgba(255,255,255,0.7); line-height:1.5;">
+                    "Can I filter Revenue YTD by month?"<br>
+                    <span style="color:var(--gold);">→ checks compatible_slicers</span>
+                </div>
+                <div style="background:rgba(245,178,0,0.08); border-left:2px solid var(--gold); padding:6px 10px; border-radius:0 6px 6px 0; font-size:10px; color:rgba(255,255,255,0.7); line-height:1.5;">
+                    "What does Margin % calculate?"<br>
+                    <span style="color:var(--gold);">→ explains DAX + base_tables</span>
+                </div>
+                <div style="background:rgba(245,178,0,0.08); border-left:2px solid var(--gold); padding:6px 10px; border-radius:0 6px 6px 0; font-size:10px; color:rgba(255,255,255,0.7); line-height:1.5;">
+                    "Which measures use time intelligence?"<br>
+                    <span style="color:var(--gold);">→ reads flags in metadata</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="arch-box fragment fade-up" data-fragment-index="2" style="padding:20px;">
+            <div style="font-size:24px; margin-bottom:10px;">🚀</div>
+            <div style="font-size:14px; font-weight:900; color:white; margin-bottom:8px;">CodeIntelligence — full stack</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.5); line-height:1.6; margin-bottom:12px;">
+                Companion RAG toolkit that ingests any JSONL — including pbi-semantic-doc output.
+            </div>
+            <div style="display:flex; flex-direction:column; gap:6px; margin-top:auto;">
+                <div style="display:flex; align-items:center; gap:8px; font-size:10px; color:rgba(255,255,255,0.6);">
+                    <span style="color:var(--gold);">▸</span> Semantic retrieval via Ollama embeddings
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; font-size:10px; color:rgba(255,255,255,0.6);">
+                    <span style="color:var(--gold);">▸</span> Cross-encoder reranking
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; font-size:10px; color:rgba(255,255,255,0.6);">
+                    <span style="color:var(--gold);">▸</span> ChromaDB persistent vector store
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; font-size:10px; color:rgba(255,255,255,0.6);">
+                    <span style="color:var(--gold);">▸</span> Chat UI at localhost:8080
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; font-size:10px; color:rgba(255,255,255,0.6);">
+                    <span style="color:var(--gold);">▸</span> OpenAI / Anthropic / Ollama endpoints
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="fragment fade-up" data-fragment-index="3" style="margin-top:14px; background:rgba(72,168,255,0.08); border:1px solid rgba(72,168,255,0.3); border-radius:12px; padding:12px 20px; display:flex; align-items:center; gap:16px; position:relative;z-index:2;">
+        <span style="font-size:20px;">🔗</span>
+        <div style="font-size:12px; color:rgba(255,255,255,0.6);">
+            <strong style="color:white;">Pipeline:</strong>&nbsp;
+            <code style="color:var(--gold);">--format rag</code> → <code style="color:var(--gold-light);">DOC_MyProject.jsonl</code> →
+            <code style="color:rgba(255,255,255,0.7);">ask_model.py</code> <span style="color:rgba(255,255,255,0.3);">or</span>
+            <code style="color:rgba(255,255,255,0.7);">CodeIntelligence</code>
+        </div>
+        <div style="margin-left:auto; font-size:11px; color:rgba(255,255,255,0.35); flex-shrink:0;">github.com/ViciusLio/CodeIntelligence</div>
+    </div>
+</div>
+<aside class="notes">
+    "Once you have the JSONL, you have two paths. ask_model.py is the quickstart — one file, no server, works in 30 seconds. CodeIntelligence is the full production stack: persistent ChromaDB, semantic reranking, chat UI, and API endpoints compatible with OpenAI, Anthropic, and Ollama. The system prompt is DAX-aware: Claude already knows how to interpret depends_on_measures, compatible_slicers, and flags — it answers questions about your model with the precision of someone who built it."
+</aside>
+</section>
+
+
+<!-- ================================================================
      SLIDE 9 — L'OUTPUT HTML SPA
      ================================================================ -->
 <section>
