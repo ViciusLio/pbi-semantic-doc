@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pbi-semantic-doc"
-version = "0.6.2"
+version = "0.7.0"
 description = "Automatic documentation generator and analyzer for Power BI semantic models (TMDL) and reports (PBIR)"
 readme = "README.md"
 license = { text = "MIT" }
@@ -26,6 +26,16 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = []  # zero external dependencies — stdlib only
+
+[project.optional-dependencies]
+# pip install pbi-semantic-doc[fastembed]   — local in-process embeddings (no server)
+fastembed = ["fastembed>=0.2"]
+# pip install pbi-semantic-doc[voyage]     — Voyage AI embeddings (Anthropic)
+voyage    = []   # uses stdlib urllib; no SDK needed — just pass --api-key
+# pip install pbi-semantic-doc[ollama]     — Ollama local server
+ollama    = []   # uses stdlib urllib; no SDK needed — just run `ollama serve`
+# pip install pbi-semantic-doc[all-embed]  — all optional embedding extras
+all-embed = ["fastembed>=0.2"]
 
 [project.scripts]
 pbi-semantic-doc = "pbi_semantic_doc.cli:main"

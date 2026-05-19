@@ -25,6 +25,8 @@ from .generator import MarkdownGenerator
 from .html_generator import HtmlGenerator
 from .report_parser import ReportParser
 from .report_generator import ReportGenerator
+from .rag_generator import RagGenerator
+from .benchmark import run_benchmark, format_report as format_benchmark
 
 
 def _safe_name(name: str) -> str:
@@ -142,10 +144,53 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument(
         "--format", "-f",
-        choices=["md", "html", "json", "text"],
+        choices=["md", "html", "json", "text", "rag"],
         default="md",
-        help="Output format: md (default), html (self-contained printable), json, text",
+        help=(
+            "Output format: md (default), html (self-contained printable), "
+            "json, text, rag (JSONL chunks for AI retrieval)"
+        ),
     )
+    p.add_argument(
+        "--benchmark",
+        action="store_true",
+        help=(
+            "Run a RAG efficiency benchmark: compares token usage between "
+            "full-doc and RAG approaches. Output format controlled by --format."
+        ),
+    )
+
+    # Embedding options (only meaningful with --format rag)
+    emb = p.add_argument_group("embedding options (used with --format rag)")
+    emb.add_argument(
+        "--embed",
+        choices=["voyage", "ollama", "fastembed"],
+        default=None,
+        metavar="PROVIDER",
+        help="Embedding provider: voyage, ollama, fastembed",
+    )
+    emb.add_argument(
+        "--embed-model",
+        default=None,
+        metavar="MODEL",
+        help=(
+            "Model to use for embeddings. "
+            "Defaults: voyage→voyage-3, ollama→bge-m3, fastembed→BAAI/bge-m3"
+        ),
+    )
+    emb.add_argument(
+        "--embed-url",
+        default=None,
+        metavar="URL",
+        help="Base URL for the Ollama server (default: http://localhost:11434)",
+    )
+    emb.add_argument(
+        "--api-key",
+        default=None,
+        metavar="KEY",
+        help="API key for the Voyage provider",
+    )
+
     p.add_argument(
         "--quiet", "-q",
         action="store_true",
@@ -161,12 +206,92 @@ def main(argv: list[str] | None = None) -> int:
 
     args = build_parser().parse_args(argv)
 
-    if args.combined:
+    if args.benchmark:
+        return run_benchmark_cmd(args)
+    elif args.combined:
         return analyze_combined(args)
     elif args.analyze_report:
         return analyze_report(args)
     else:
         return analyze_semantic_model(args)
+
+
+def _build_embedder(args):
+    """Return an EmbeddingProvider from CLI args, or None if --embed not set."""
+    if not getattr(args, "embed", None):
+        return None
+    from .embedder import get_provider
+    return get_provider(
+        name=args.embed,
+        model=getattr(args, "embed_model", None),
+        api_key=getattr(args, "api_key", None),
+        base_url=getattr(args, "embed_url", None),
+    )
+
+
+def _embed_chunks(chunks, embedder, quiet: bool) -> list:
+    """Attach embeddings to a list of RagChunks, with progress output."""
+    if not embedder:
+        return chunks
+    total = len(chunks)
+    if not quiet:
+        print(f"  Embedding {total} chunks with {embedder.model_name}...")
+    texts = [c.text for c in chunks]
+    try:
+        vectors = embedder.embed_batch(texts)
+    except Exception as exc:
+        print(f"Warning: embedding failed — {exc}", file=sys.stderr)
+        return chunks
+    for chunk, vec in zip(chunks, vectors):
+        chunk.embedding = vec
+    if not quiet:
+        dim = len(vectors[0]) if vectors else "?"
+        print(f"  Done. Dimension: {dim}")
+    return chunks
+
+
+def run_benchmark_cmd(args) -> int:
+    """Run the RAG benchmark and output the report."""
+    model_path = Path(args.model_path).resolve()
+    if not model_path.exists():
+        print(f"Error: path does not exist: {model_path}", file=sys.stderr)
+        return 1
+
+    try:
+        parser = TmdlParser()
+        model = parser.parse(model_path)
+    except FileNotFoundError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    except Exception as exc:
+        print(f"Unexpected error while parsing: {exc}", file=sys.stderr)
+        return 1
+
+    if not args.quiet:
+        print(f"Running benchmark on: {model.name}")
+
+    result = run_benchmark(model)
+
+    fmt = args.format if args.format in ("md", "html", "json") else "md"
+    content = format_benchmark(result, fmt=fmt)
+
+    if args.output:
+        output_path = Path(args.output).resolve()
+    else:
+        ext = ".html" if fmt == "html" else (".json" if fmt == "json" else ".md")
+        output_path = model_path.parent / f"BENCHMARK_{_safe_name(model.name)}{ext}"
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(content, encoding="utf-8")
+
+    if not args.quiet:
+        print(
+            f"✓ Benchmark saved: {output_path}\n"
+            f"  Questions tested : {len(result.questions)}\n"
+            f"  Token savings    : {result.avg_reduction_pct:.1%}\n"
+            f"  Retrieval prec.  : {result.retrieval_precision:.1%}"
+        )
+    return 0
 
 
 def analyze_semantic_model(args) -> int:
@@ -191,13 +316,24 @@ def analyze_semantic_model(args) -> int:
     if args.output:
         output_path = Path(args.output).resolve()
     else:
-        ext = ".html" if args.format == "html" else ".md"
+        if args.format == "html":
+            ext = ".html"
+        elif args.format == "rag":
+            ext = ".jsonl"
+        else:
+            ext = ".md"
         output_path = model_path.parent / f"DOC_{_safe_name(model.name)}{ext}"
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     if args.format == "html":
         content = HtmlGenerator().generate(model)
+    elif args.format == "rag":
+        embedder = _build_embedder(args)
+        rag_gen = RagGenerator()
+        chunks = rag_gen.generate(model=model)
+        chunks = _embed_chunks(chunks, embedder, args.quiet)
+        content = "\n".join(c.to_json() for c in chunks) + "\n"
     else:
         content = MarkdownGenerator().generate(model)
     output_path.write_text(content, encoding="utf-8")
@@ -206,13 +342,24 @@ def analyze_semantic_model(args) -> int:
         tables = len(model.visible_tables)
         measures = sum(len(t.measures) for t in model.visible_tables)
         relationships = len(model.relationships)
-        print(
-            f"✓ Documentation generated: {output_path}\n"
-            f"  Model   : {model.name}\n"
-            f"  Tables  : {tables}\n"
-            f"  Measures: {measures}\n"
-            f"  Rels    : {relationships}"
-        )
+        if args.format == "rag":
+            chunk_count = content.count("\n")
+            print(
+                f"✓ RAG chunks generated: {output_path}\n"
+                f"  Model   : {model.name}\n"
+                f"  Chunks  : {chunk_count}\n"
+                f"  Tables  : {tables}\n"
+                f"  Measures: {measures}\n"
+                f"  Rels    : {relationships}"
+            )
+        else:
+            print(
+                f"✓ Documentation generated: {output_path}\n"
+                f"  Model   : {model.name}\n"
+                f"  Tables  : {tables}\n"
+                f"  Measures: {measures}\n"
+                f"  Rels    : {relationships}"
+            )
 
     return 0
 
@@ -337,6 +484,8 @@ def analyze_combined(args) -> int:
             ext = ".json"
         elif args.format == "html":
             ext = ".html"
+        elif args.format == "rag":
+            ext = ".jsonl"
         else:
             ext = ".md"
         output_path = project_path / f"DOC_{_safe_name(project_name)}{ext}"
@@ -363,6 +512,12 @@ def analyze_combined(args) -> int:
         content = json.dumps(combined, indent=2, ensure_ascii=False)
     elif args.format == "html":
         content = HtmlGenerator().generate_combined(model, report_metrics, project_name)
+    elif args.format == "rag":
+        embedder = _build_embedder(args)
+        rag_gen = RagGenerator()
+        chunks = rag_gen.generate(model=model, report_metrics=report_metrics)
+        chunks = _embed_chunks(chunks, embedder, args.quiet)
+        content = "\n".join(c.to_json() for c in chunks) + "\n"
     else:  # markdown — unified single document
         content = _combined_markdown(model, report_metrics, project_name)
 
