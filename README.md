@@ -6,7 +6,7 @@
 [![Python 3.9+](https://img.shields.io/pypi/pyversions/pbi-semantic-doc)](https://pypi.org/project/pbi-semantic-doc/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-345%20passing-brightgreen)](#)
-[![Version](https://img.shields.io/badge/version-0.6.2-blue)](#)
+[![Version](https://img.shields.io/badge/version-0.7.0-blue)](#)
 
 Built with ❤️ by [ViciusLio](https://github.com/ViciusLio) in collaboration with [Claude AI](https://claude.ai) (Anthropic).
 
@@ -33,6 +33,15 @@ pbi-semantic-doc ./MyProject.Report --analyze-report
 
 # Both in one document (from the .pbip project folder)
 pbi-semantic-doc ./MyProject --combined
+
+# RAG-ready JSONL chunks with pre-resolved DAX dependencies (new in v0.7)
+pbi-semantic-doc ./MyProject.SemanticModel --format rag
+
+# RAG + embeddings via Voyage AI (Anthropic)
+pbi-semantic-doc ./MyProject.SemanticModel --format rag --embed voyage --api-key va-...
+
+# RAG efficiency benchmark — token savings vs full-doc
+pbi-semantic-doc ./MyProject.SemanticModel --benchmark
 ```
 
 ---
@@ -112,8 +121,13 @@ pbi-semantic-doc ./MyProject --combined --format json --output analysis.json
 | `PATH` | Path to `.SemanticModel`, `.Report`, or `.pbip` project folder |
 | `--analyze-report` | Analyze report instead of semantic model |
 | `--combined` | Produce a single document covering both semantic model and report |
-| `--format` | Output format: `md` (default), `html`, `json`, `text` |
-| `--output`, `-o` | Output file path (default: `DOC_<name>.md` / `.html` next to the input folder) |
+| `--format` | Output format: `md` (default), `html`, `json`, `text`, `rag` |
+| `--output`, `-o` | Output file path (default: `DOC_<name>.md` / `.html` / `.jsonl` next to the input folder) |
+| `--benchmark` | Run RAG efficiency benchmark — token savings vs full-doc, MD/HTML/JSON output |
+| `--embed` | Embedding provider for `--format rag`: `voyage`, `ollama`, `fastembed` |
+| `--embed-model` | Model override (defaults: voyage→`voyage-3`, ollama→`bge-m3`, fastembed→`BAAI/bge-m3`) |
+| `--embed-url` | Ollama server base URL (default: `http://localhost:11434`) |
+| `--api-key` | API key for Voyage AI |
 | `--quiet`, `-q` | Suppress console output |
 
 ---
@@ -126,8 +140,10 @@ pbi-semantic-doc ./MyProject --combined --format json --output analysis.json
 |------|------------------------|
 | Semantic model (md) | `DOC_<ModelName>.md` — **next to** the `.SemanticModel` folder |
 | Semantic model (html) | `DOC_<ModelName>.html` — **next to** the `.SemanticModel` folder |
+| Semantic model (rag) | `DOC_<ModelName>.jsonl` — **next to** the `.SemanticModel` folder |
 | Report | `DOC_<ReportName>.md` / `.html` — **next to** the `.Report` folder |
-| Combined | `DOC_<ProjectName>.md` / `.html` — **inside** the `.pbip` project folder |
+| Combined | `DOC_<ProjectName>.md` / `.html` / `.jsonl` — **inside** the `.pbip` project folder |
+| Benchmark | `BENCHMARK_<ModelName>.md` / `.html` / `.json` — **next to** the `.SemanticModel` folder |
 
 Example: running against `Artificial Intelligence Sample.SemanticModel` produces `DOC_Artificial_Intelligence_Sample.md` in the parent folder.
 
@@ -209,6 +225,24 @@ For every measure, the HTML output includes a collapsible **Lineage** section th
 - **Filter-removed tables** — tables explicitly cleared with `ALL()`, `ALLEXCEPT()`, or `ALLSELECTED()`
 - **Measure dependencies** — direct and transitive `[MeasureName]` references, resolved via BFS (cycle-safe)
 - **Flags** — time intelligence, `USERELATIONSHIP`, `TREATAS`
+
+### RAG Output & AI Readiness (`--format rag`) — new in v0.7
+
+Generates a `.jsonl` file where each line is a semantically self-contained chunk ready for embedding and retrieval:
+
+- **One chunk per entity**: overview, table, measure, relationship, report page
+- **DAX dependencies pre-resolved**: each measure chunk includes `depends_on_measures`, `base_tables`, `compatible_slicers`, and flags (time intelligence, inactive relationships) — no AI parsing required
+- **Compatible with any vector store**: LlamaIndex, LangChain, Chroma, Weaviate, Pinecone, OpenAI Files API
+
+**Embedding providers** (all optional, no hard dependencies):
+
+| Provider | Command | Notes |
+|---|---|---|
+| Voyage AI (Anthropic) | `--embed voyage --api-key va-...` | `voyage-code-3` understands DAX; `voyage-multilingual-2` for Italian models |
+| Ollama (local) | `--embed ollama --embed-model bge-m3` | No API key, no data leaves the machine |
+| FastEmbed (in-process) | `--embed fastembed` | `pip install pbi-semantic-doc[fastembed]`, no server needed |
+
+**Benchmark** (`--benchmark`): auto-generates questions from the model structure, simulates TF-based retrieval, and reports token savings and retrieval precision in MD/HTML/JSON. Typical result: **~95–99% token reduction** per query vs passing the full document.
 
 ### General
 - Zero external dependencies — pure Python 3.9+ stdlib
@@ -293,15 +327,17 @@ Manual descriptions in Power BI Desktop always take precedence over auto-generat
 - **Unused columns**: detect columns not referenced in any measure, relationship, or visual
 - **Hidden object inventory**: report on all hidden tables and columns
 
-### v0.7 — Report Deep Dive
-- **Visual-to-measure mapping**: detect which measures each visual uses (from `prototypeQuery`)
-- **Filter analysis**: page-level and visual-level filters with target fields and values
-- **Theme extraction**: color palette and font settings from theme files
-- **Tooltip page detection**: pages used exclusively as tooltip layers
+### v0.7 ✅ — RAG & AI Readiness
+- **`--format rag`**: JSONL output with one self-contained chunk per entity (measure, table, relationship, report page). DAX dependencies pre-resolved via `ModelLineage` — no AI parsing of raw DAX required
+- **Embedding providers**: Voyage AI (Anthropic), Ollama (local, `bge-m3`), FastEmbed (in-process). Voyage and Ollama use stdlib `urllib` — zero hard dependencies
+- **`--benchmark`**: auto-generates questions from model structure, simulates TF-based retrieval, reports token savings and retrieval precision (MD/HTML/JSON). Typical result: ~95–99% token reduction vs full-doc
+- **Optional extras**: `pip install pbi-semantic-doc[fastembed]` for in-process embeddings; `[all-embed]` for all providers
 
 ### Future
+- Report Deep Dive: visual-to-measure mapping, filter analysis, theme extraction
 - Pre-commit hook configuration helper
 - VS Code extension wrapper
+
 
 ---
 

@@ -375,7 +375,7 @@
             <span class="tag">DAX Analyzer</span>
             <span class="tag">Lineage Engine</span>
             <span class="tag">HTML SPA</span>
-            <span class="tag">v0.6.2</span>
+            <span class="tag">v0.7.0</span>
         </div>
     </div>
 </div>
@@ -1188,7 +1188,110 @@
 
 
 <!-- ================================================================
-     SLIDE 8 — L'OUTPUT HTML SPA
+     SLIDE 8 — RAG & AI READINESS v0.7
+     ================================================================ -->
+<section>
+<div class="slide slide-dark" style="position:relative;">
+    <div class="bg-deco">
+        <svg width="100%" height="100%" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg"
+             style="position:absolute;top:0;left:0;">
+            <circle cx="200" cy="200" r="300" stroke="#F5B200" stroke-width="1" fill="none" opacity="0.04"/>
+            <circle cx="1080" cy="500" r="280" stroke="#48A8FF" stroke-width="1" fill="none" opacity="0.05"/>
+        </svg>
+    </div>
+
+    <div class="slide-header" style="position:relative;z-index:2;">
+        <div class="vl-mark">
+            <div class="vl-box">VL</div>
+            <span class="vl-name vl-name-dark">pbi-semantic-doc</span>
+        </div>
+        <div class="slide-eyebrow ey-dark">08 &nbsp;—&nbsp; RAG &amp; AI Readiness · v0.7</div>
+    </div>
+
+    <div style="font-size:28px; font-weight:900; color:white; line-height:1.2; margin-bottom:20px; position:relative;z-index:2;">
+        Dalla documentazione al<br><span class="accent-gold">carburante per l'AI</span>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; flex:1; position:relative;z-index:2;">
+
+        <div class="arch-box fragment fade-up" data-fragment-index="0" style="padding:22px;">
+            <div style="font-size:28px; margin-bottom:12px;">🧩</div>
+            <div style="font-size:15px; font-weight:900; color:white; margin-bottom:8px;">--format rag</div>
+            <div style="font-size:12px; color:rgba(255,255,255,0.5); line-height:1.6; margin-bottom:14px;">
+                Genera un file <code style="color:var(--gold);">.jsonl</code> — un chunk autonomo per entità (misura, tabella, relazione, pagina report). Le dipendenze DAX sono <strong style="color:white;">pre-risolte</strong>: nessuna AI deve parsare il DAX grezzo.
+            </div>
+            <div style="margin-top:auto; display:flex; flex-wrap:wrap; gap:5px;">
+                <span class="ib ib-gold">chunk misura</span>
+                <span class="ib ib-blue">chunk tabella</span>
+                <span class="ib ib-blue">relazione</span>
+            </div>
+        </div>
+
+        <div class="arch-box fragment fade-up" data-fragment-index="1" style="padding:22px;">
+            <div style="font-size:28px; margin-bottom:12px;">🔌</div>
+            <div style="font-size:15px; font-weight:900; color:white; margin-bottom:8px;">Embedding Provider</div>
+            <div style="font-size:12px; color:rgba(255,255,255,0.5); line-height:1.6; margin-bottom:14px;">
+                Tre provider, zero dipendenze obbligatorie. Voyage e Ollama usano solo la stdlib <code style="color:var(--gold);">urllib</code>.
+            </div>
+            <div style="display:flex; flex-direction:column; gap:7px; margin-top:auto;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="ib ib-gold" style="min-width:70px; text-align:center;">Voyage AI</span>
+                    <span style="font-size:11px; color:rgba(255,255,255,0.45);">Anthropic · cloud · voyage-code-3</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="ib ib-blue" style="min-width:70px; text-align:center;">Ollama</span>
+                    <span style="font-size:11px; color:rgba(255,255,255,0.45);">locale · no API key · bge-m3</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="ib ib-blue" style="min-width:70px; text-align:center;">FastEmbed</span>
+                    <span style="font-size:11px; color:rgba(255,255,255,0.45);">in-process · nessun server</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="arch-box fragment fade-up" data-fragment-index="2" style="padding:22px;">
+            <div style="font-size:28px; margin-bottom:12px;">📊</div>
+            <div style="font-size:15px; font-weight:900; color:white; margin-bottom:8px;">--benchmark</div>
+            <div style="font-size:12px; color:rgba(255,255,255,0.5); line-height:1.6; margin-bottom:14px;">
+                Genera domande automatiche dal modello. Misura il risparmio di token (simulazione TF retrieval) rispetto a passare l'intero documento all'AI.
+            </div>
+            <div style="margin-top:auto; display:flex; flex-direction:column; gap:6px;">
+                <div style="display:flex; justify-content:space-between; font-size:12px;">
+                    <span style="color:rgba(255,255,255,0.5);">Risparmio token</span>
+                    <span style="color:#7ED98B; font-weight:800;">~95–99%</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:12px;">
+                    <span style="color:rgba(255,255,255,0.5);">Costo / 1.000 query</span>
+                    <span style="color:#7ED98B; font-weight:800;">-98%</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:12px;">
+                    <span style="color:rgba(255,255,255,0.5);">Formati output</span>
+                    <span style="color:var(--gold); font-weight:800;">MD · HTML · JSON</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fragment fade-up" data-fragment-index="3" style="margin-top:16px; background:rgba(245,178,0,0.1); border:1px solid rgba(245,178,0,0.35); border-radius:12px; padding:14px 20px; display:flex; align-items:center; gap:16px; position:relative;z-index:2;">
+        <span style="font-size:22px;">🤖</span>
+        <div>
+            <div style="font-size:13px; font-weight:800; color:white; margin-bottom:3px;">Compatibile con tutto l'ecosistema AI</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.45);">LlamaIndex · LangChain · Chroma · Weaviate · Pinecone · OpenAI Files API · qualsiasi pipeline JSONL-compatibile</div>
+        </div>
+        <div style="margin-left:auto; text-align:right; flex-shrink:0;">
+            <div style="font-size:22px; font-weight:900; color:var(--gold);">0</div>
+            <div style="font-size:10px; color:rgba(255,255,255,0.4);">dipendenze aggiunte</div>
+        </div>
+    </div>
+</div>
+<aside class="notes">
+    "Con v0.7 la documentazione diventa carburante per l'AI. Invece di passare 40.000 token a Claude ogni volta, chunchi il modello una volta sola, lo embeddizzi, e recuperi solo i 500 token rilevanti per la domanda. 98% di risparmio sui costi, e l'AI risponde meglio perché il contesto è focalizzato."
+</aside>
+</section>
+
+
+<!-- ================================================================
+     SLIDE 9 — L'OUTPUT HTML SPA
      ================================================================ -->
 <section>
 <div class="slide slide-light">
@@ -1197,7 +1300,7 @@
             <div class="vl-box">VL</div>
             <span class="vl-name vl-name-light">pbi-semantic-doc</span>
         </div>
-        <div class="slide-eyebrow ey-light">08 &nbsp;—&nbsp; L'Output</div>
+        <div class="slide-eyebrow ey-light">09 &nbsp;—&nbsp; L'Output</div>
     </div>
 
     <div style="display:flex; gap:36px; flex:1; min-height:0;">
@@ -1290,7 +1393,7 @@
             <div class="vl-box">VL</div>
             <span class="vl-name vl-name-dark">pbi-semantic-doc</span>
         </div>
-        <div class="slide-eyebrow ey-dark">09 &nbsp;—&nbsp; Installazione &amp; Uso</div>
+        <div class="slide-eyebrow ey-dark">10 &nbsp;—&nbsp; Installazione &amp; Uso</div>
     </div>
 
     <div style="display:flex; gap:28px; flex:1; min-height:0; position:relative;z-index:2;">
@@ -1330,7 +1433,7 @@
         <div style="flex:0 0 270px; display:flex; flex-direction:column; gap:12px;">
             <div class="arch-layer hl" style="flex-direction:column; align-items:flex-start; gap:4px; padding:16px;">
                 <strong style="font-size:13px; color:white;">📦 PyPI</strong>
-                <code style="font-size:11px; color:var(--gold);">pbi-semantic-doc · v0.6.2</code>
+                <code style="font-size:11px; color:var(--gold);">pbi-semantic-doc · v0.7.0</code>
                 <span style="font-size:10px; color:rgba(255,255,255,0.4); margin-top:4px;">pip install pbi-semantic-doc</span>
             </div>
 
@@ -1373,7 +1476,7 @@
 
 
 <!-- ================================================================
-     SLIDE 10 — CHIUSURA
+     SLIDE 11 — CHIUSURA
      ================================================================ -->
 <section>
 <div class="slide slide-dark" style="position:relative;">
@@ -1388,11 +1491,11 @@
 
     <div class="slide-header" style="position:relative;z-index:2;">
         <div class="vl-mark"><div class="vl-box">VL</div></div>
-        <div class="slide-eyebrow ey-dark">10 &nbsp;—&nbsp; Riepilogo</div>
+        <div class="slide-eyebrow ey-dark">11 &nbsp;—&nbsp; Riepilogo</div>
     </div>
 
     <div class="demo-wrap" style="position:relative;z-index:2;">
-        <div class="demo-badge">v0.6.2 · disponibile su PyPI</div>
+        <div class="demo-badge">v0.7.0 · disponibile su PyPI</div>
         <div class="demo-title">
             <span class="accent-gold">pbi</span>-semantic-doc
         </div>
